@@ -111,7 +111,13 @@
 \section{Introduction}
 %-------------------------------------------------------------------------------
 
-In 2023, there were 29,065 new vulnerabilities recorded, as illustrated in Figure~\ref{fig:cves_per_year}. This number continues to rise year on year, underscoring the growing challenge of managing and prioritizing software vulnerabilities. These vulnerabilities are documented using the Common Vulnerabilities and Exposure system (CVE~\cite{CVE}), with CVSS scores derived from these entries to indicate severity and impact. The National Vulnerability Database (NVD~\cite{NVD}) serves as the primary source for CVSS-enriched CVE data and is widely used in research (e.g., \cite{costa, nvd_example1, nvd_example2}). The focus of the research is enhancing the interpretability and analysis of the CVE/CVSS data itself. We employed clustering techniques, primarily Latent Dirichlet Allocation (LDA~\cite{lda_origin}), along with other dataset analysis methods to uncover patterns within the vulnerability descriptions. This approach offers several advantages:
+In 2023, there were 29,065 new vulnerabilities recorded, as illustrated in
+Figure~\ref{fig:cves_per_year}. This number continues to rise year on year, underscoring the growing
+challenge of managing and prioritizing software vulnerabilities. These vulnerabilities are
+documented using the Common Vulnerabilities and Exposure system (CVE~\cite{CVE}), with CVSS scores
+derived from these entries to indicate severity and impact. The National Vulnerability Database
+(NVD~\cite{NVD}) serves as the primary source for CVSS-enriched CVE data and is widely used in
+research (e.g., \cite{costa, nvd_example1, nvd_example2}). The focus of our research is enhancing the interpretability and analysis of the CVE/CVSS data itself. We employed clustering techniques, primarily Latent Dirichlet Allocation (LDA~\cite{lda_origin}), along with other dataset analysis methods to uncover patterns within the vulnerability descriptions. This approach offers several advantages:
 
 % However, to explore the potential benefits of multiple data sources, we also investigated the MITRE database~\cite{MITRE}, which is the main repository for CVEs and includes a significant number of entries with CVSS scores. The initial comparison between NVD and MITRE databases employed a methodology inspired by the paper \say{Can the Common Vulnerability Scoring System be Trusted? A Bayesian Analysis}~\cite{bayes}. This approach aimed to assess the agreement between different data sources in scoring CVEs and explore the feasibility of establishing a ground truth. The analysis revealed differences in how these databases rate CVEs (see Figures~\ref{fig:counts}, \ref{fig:mitre_31_confusion_matrices_1}, \ref{fig:nvd_31_confusion_matrices_1}), highlighting the subjective nature of CVSS scoring and the challenges in achieving consistency across different evaluation teams. While the comparison of multiple datasets did not yield the anticipated improvements in CVSS prediction, it provided valuable insights into the variability of human-assigned scores. This variability suggests that automated prediction models may face similar challenges in areas where human evaluators disagree. Given these findings,
 
@@ -162,13 +168,20 @@ Vulnerabilities are stored in a consistent format called Common Vulnerabilities 
 
 \bigskip
 
-CVE reports have a unique identifier, which is given by one of the CVE numbering authorities (CNA~\cite{CNA}), such as GitHub, Google or any of the \href{https://www.cve.org/PartnerInformation/ListofPartners}{CVE list of partners}~\cite{partners}. The description is the most important part in our case. This should provide information about the vulnerability. What can be exploited (device / software component)? How is the product affected if the vulnerability is exploited? Ideally there would be a part of the description that relates to every metric, unfortunately these descriptions are not necessarily suited to machine learning as the people writing the descriptions are expecting a lot of intrinsic knowledge or assuming a default value through omission.
+\todo[inline]{
+	The explanation is from the standpoint of using within machine learning specifically, unsure if
+	that still makes full sense, though does add something extra in terms of keeping this in for people
+	who are already well aware of its existence}
+
+CVE reports have a unique identifier, which is given by one of the CVE numbering authorities
+(CNA~\cite{CNA}), such as GitHub, Google or any of the
+\href{https://www.cve.org/PartnerInformation/ListofPartners}{CVE list of partners}~\cite{partners}.
+The description is the most important part in our case. This should provide information about the
+vulnerability. What can be exploited (e.g. device / software component)? How is the product affected if the vulnerability is exploited? Ideally there would be a part of the description that relates to every metric, unfortunately these descriptions are not necessarily suited to machine learning as the people writing the descriptions are expecting a lot of intrinsic knowledge or assuming a default value through omission.
 
 \subsection{The Common Vulnerability Scoring System}
 
-CVSS scoring is a high level way to break up vulnerabilities into different categories. Organisations can use it to choose which vulnerability to focus on first. CVSS is broken up into three distinct sections: base, temporal and environmental scores.
-
-For brevity we will only show the specifics of CVSS 3.1~\cite{CVSS_31} as this is by far the most commonly used version, even if it is not the most recent.
+CVSS scoring is a high level way to break up vulnerabilities into different categories. Organisations can use it to choose which vulnerability to focus on first. For brevity we will only show the specifics of CVSS 3.1~\cite{CVSS_31} as this is by far the most commonly used version, even if it is not the most recent. CVSS is broken up into three distinct sections: BASE, TEMPORAL AND ENVIRONMENTAL scores.
 
 \subsubsection{Base Score}
 
@@ -211,10 +224,14 @@ Below we again summarise from the \href{https://www.first.org/cvss/v3.1/specific
 
 \bigskip
 
+\todo[inline]{Does this sort of conjecture belong in a more succinct paper?}
+
 Temporal metrics would be useful in general for a CVSS score, however NVD do not store these temporal metrics. As far as we can tell there is no reason given for this specifically, though discourse \href{https://security.stackexchange.com/questions/270257/cvss-v3-and-v3-1-missing-temporal-metrics-exploit-code-maturity-and-remediation}{(Stack exchange post)}~\cite{stack_exchange} around the subject suggests that this is due to a lack of verifiable reporting. From our perspective, both remidiation level and report confidence feel like they could have scores attributed to them, however finding verifiable reports on the exploits seen in the wild is difficult. There are two relatively new organisations trying to provide a solution to this lack of verifiable reporting, Cybersecurity \& Infrastructure Security Agency (CISA, \href{https://www.cisa.gov/known-exploited-vulnerabilities-catalog}{public sector}) and inthewild.org (\href{https://inthewild.io/}{private sector}~\cite{cisa}). We choose not to go into environmental metrics as they are specific to each individual business.
 
 
 \subsection{Data Options}
+\todo[inline]{This section is confusing at present as all MITRE could be removed if deemed surplus
+	to requirements}
 
 We will be using NVD and MITRE as the sources of data. In 2016 when Johnson et al.\@ did their paper
 on CVSS~\cite{bayes}, they had access to five different databases. Unfortunately only two of these
@@ -222,7 +239,9 @@ remain for modern data. There are others, but they are either in archival or pro
 
 \subsubsection{National Vulnerability Database} \label{NVD_SECTION}
 
-The National Vulnerability Database is the defacto standard dataset used for CVSS generation research~\cite{costa, nvd_example1, nvd_example2}.  NVD being the standard makes a lot of sense as it is built for the purpose with a team dedicated to enriching CVEs with CVSS scores. The dataset we are using was retrieved using the NVD API in March 2024 and contains $\sim$100000 CVEs enriched with CVSS scores. This comes in a consistently formatted JSON dump.
+The National Vulnerability Database is the defacto standard dataset used for CVSS generation
+research~\cite{costa, nvd_example1, nvd_example2}.  NVD being the standard makes a lot of sense as
+it is built for the purpose of housing CVSS, with a team dedicated to enriching CVEs with CVSS scores. The dataset we are using was retrieved using the NVD API in March 2024 and contains $\sim$100000 CVEs enriched with CVSS scores. This comes in a consistently formatted JSON dump.
 
 \todo[inline]{There is some temptation to keep in some of the comparisons to MITRE as I think the
 	insights that different people rate vulnerabilities differently is interesting, without
@@ -268,20 +287,29 @@ In this section, we address the question: \say{What are the important keywords f
 
 \begin{itemize}
 	\item It helps in understanding the underlying patterns and themes in vulnerability descriptions that contribute to specific CVSS ratings.
-	\item Identifying key keywords can aid in automating the process of CVSS scoring for new vulnerabilities.
+	      \todo[inline]{This has not been mentioned previously and is another reason why this
+		      technique could be useful, could be ran on CVE descriptions on entry to MITRE}
+	\item Identifying important keywords can aid in automating the process of CVSS scoring for new vulnerabilities.
 	\item It provides insights into the linguistic features that security experts focus on when assigning CVSS scores.
 \end{itemize}
 
 
-To explore this question, we employ various clustering and analysis techniques on the vulnerability descriptions. Our approach is based on the assumption that vulnerabilities with similar CVSS ratings may share common linguistic features or themes. By identifying these patterns, we can potentially uncover the factors that contribute to each CVSS metric and class. In this analysis, we utilize the following methods:
+To explore this question, we employ clustering and topic analysis techniques on the vulnerability
+descriptions. Our approach is based on the assumption that vulnerability descriptions with similar CVSS ratings may share common linguistic features or themes. By identifying these patterns, we can uncover the factors that contribute to each CVSS metric and class. In this analysis, we utilize the following methods:
 
 \begin{itemize}
 
 	\item	K-Means Clustering: We start with a straightforward K-means clustering approach to get an initial understanding of how vulnerability descriptions group together. We arbitrarily choose eight clusters to match the number of CVSS metrics, providing a baseline for further analysis.
+
 	\item Latent Dirichlet Allocation (LDA): We then employ a more sophisticated topic modeling technique, LDA, in conjunction with Word2Vec embeddings. This allows us to discover latent themes in the vulnerability descriptions and how they relate to CVSS metrics.
+
+	      \todo[inline]{Add in topic merging to here and replace purity analysis as that is just part of
+		      the LDA process}
 	\item Purity Analysis: To evaluate the effectiveness of our clustering, we use the purity metric, which helps us understand how well our clusters align with the predefined CVSS classes.
 \end{itemize}
 
+\todo[inline]{This part needs to also contain some introduction to the next K-Means section, the LDA
+	results explanation could still be part of this or used as a transition after the k-means bit.}
 Throughout this section, we will present the results of these analyses, discussing the key findings for each CVSS metric (\texttt{Integrity Impact}, \texttt{Confidentiality Impact}, and \texttt{Availability Impact}) and their respective classes (\texttt{NONE}, \texttt{LOW}, \texttt{HIGH}). We will explore the most representative clusters for each class, the predominant terms associated with these clusters, and how these findings contribute to our understanding of the factors influencing CVSS ratings.
 
 \subsection{K-Means Clustering of Vulnerability Descriptions}
@@ -305,6 +333,9 @@ The analysis begins by loading vulnerability descriptions from a dataset and usi
 
 To assess the stability of the results, the clustering process is repeated multiple times with different random seeds. We did record a coherency score, but as this was just for exploratory purposes, the important part was if there was at least some indicator of this being a positive direction of inquiry.
 
+\todo[inline]{As we will be providing the "artifacts", git repo I assume, we should link to it for
+	these sections and the provided code, though might require some cleanup for it to be usable for
+	anyone else...}
 \subsubsection{Interpretation}
 
 Below are the example topics gained from the initial K-means clustering:
@@ -321,6 +352,9 @@ Below are the example topics gained from the initial K-means clustering:
 \end{itemize}
 
 
+\todo[inline]{The choice of five here is weak, unsure what to do about that though, there may be
+	some stats reason to choose a specific number here, some kind of elbow method on distribution
+	etc}
 The most promising from this initial set is cluster four, highlighted in red above. Cross-site scripting (XSS) and WordPress plugins are a common trend within CVEs. Figure~\ref{fig:cross_site_per_year} shows the counts per year of CVEs published containing at least five of the words from that cluster. Five is arbitrary, this is more here just to show a potential insight in looking at these trends. In this case, from 2019 to 2023 there is a large increase in these types of vulnerabilities, mainly in WordPress plugins. You may notice the trend matches with the general trend of CVEs published (Figure~\ref{fig:cves_per_year}), this is a positive result, in that, the clustering is still following the underlying distribution and has not failed to capture the overall trend.
 
 
