@@ -362,23 +362,25 @@ Here are some examples of the descriptions (Table~\ref{tab:cve-descriptions})
 
 \begin{table}[h]
 	\begin{center}
-		\begin{tabular}{|p{0.2\textwidth}|p{0.7\textwidth}|}
-			\hline
-			\textbf{CVE ID} & \textbf{Description}                                                                                                                               \\
-			\hline
+		\resizebox{\columnwidth}{!}{
+			\begin{tabular}{|p{0.2\textwidth}|p{0.7\textwidth}|}
+				\hline
+				\textbf{CVE ID} & \textbf{Description}                                                                                                                               \\
+				\hline
 
-			CVE-2023-24378  & Auth. (contributor+) Stored Cross-Site Scripting (XSS) vulnerability in Codeat Glossary plugin $\leq$~2.1.27 versions.                             \\
+				CVE-2023-24378  & Auth. (contributor+) Stored Cross-Site Scripting (XSS) vulnerability in Codeat Glossary plugin $\leq$~2.1.27 versions.                             \\
 
-			\hline
+				\hline
 
-			CVE-2023-24396  & Auth. (admin+) Stored Cross-Site Scripting (XSS) vulnerability in E4J s.R.L. VikBooking Hotel Booking Engine \& PMS plugin $\leq$~1.5.11 versions. \\
+				CVE-2023-24396  & Auth. (admin+) Stored Cross-Site Scripting (XSS) vulnerability in E4J s.R.L. VikBooking Hotel Booking Engine \& PMS plugin $\leq$~1.5.11 versions. \\
 
-			\hline
+				\hline
 
-			CVE-2023-25062  & Auth. (admin+) Stored Cross-Site Scripting (XSS) vulnerability in PINPOINT.WORLD Pinpoint Booking System plugin $\leq$~2.9.9.2.8 versions.         \\
+				CVE-2023-25062  & Auth. (admin+) Stored Cross-Site Scripting (XSS) vulnerability in PINPOINT.WORLD Pinpoint Booking System plugin $\leq$~2.9.9.2.8 versions.         \\
 
-			\hline
-		\end{tabular}
+				\hline
+			\end{tabular}
+		}
 
 	\end{center}
 	\caption{CVE Descriptions for Various WordPress Plugins}
@@ -398,17 +400,26 @@ Here are some examples of the descriptions (Table~\ref{tab:cve-descriptions})
 
 \subsection{Latent Dirichlet Allocation Methodology}
 
+\todo[inline]{Lots of talk here about the topics or themes not being known, however to some degree
+	we do know or have some inkling based on the CWE ( assuming that there is a CWE for that
+	description)}
 The next approach to topic modeling utilizes Latent Dirichlet Allocation (LDA)~\cite{lda_origin} in conjunction with Word2Vec~\cite{word2vec} embeddings to analyze Common Vulnerabilities and Exposures (CVE) descriptions. As an unsupervised learning method, LDA is well-suited for exploring large collections of text data without predefined categories~\cite{lda_origin, latent_handbook}. This is particularly valuable in the CVE context, where we aim to discover latent themes in vulnerability descriptions without prior knowledge of these themes. LDA's soft clustering approach allows CVE descriptions to belong to multiple topics with varying probabilities~\cite{latent_handbook}, which is beneficial given the multi-faceted nature of many vulnerabilities. Furthermore, LDA produces human-interpretable topics~\cite{lda_origin}, facilitating easier derivation of insights from the clustering results. The paper \say{Security trend analysis with CVE topic models, by Neuhaus \& Zimmerman (2010)}\cite{cve_topic_modelling} uses this technique to great effect on the NVD dataset (the analysis was for data ending in 2009) giving precedence to LDA being effective for this sort of task.
 
 The methodology comprises several key steps, which are detailed in the subsections below.
 
-\subsubsection{Data Preprocessing} We begin by preprocessing the CVE descriptions:
+\subsubsection{Data Preprocessing}
+
+We begin by preprocessing the CVE descriptions:
 
 \begin{itemize}
 	\item Custom stopwords are defined, combining standard English stopwords with domain-specific terms (e.g., \say{vulnerability}, \say{attacker}).
+	      \todo[inline]{Might be good to explain how they are tokenized?}
 	\item Each description is tokenized and filtered, removing stopwords and short tokens (length $\leq 2$).
 	\item A dictionary is created from the processed texts, filtering out extremely rare and extremely common terms.
 \end{itemize}
+
+\todo[inline]{Need to add small specific stop word example to show why they need removing, could
+	also show a distribution with them still there to show the problem}
 
 This data processing is necessary due to this type of topic discovery relying on word distributions, and therefore word frequencies. As a result stop words just muddy the water and put more interesting and relevant topic words further down.
 
@@ -429,21 +440,24 @@ This embedding captures semantic relationships between words in the CVE context.
 The parameters chosen here just felt like reasonable defaults and have not been explored. There are also other options in using something like pretrained fasttext~\cite{fasttext} as used in \cite{nvd_clustering_fasttext}.
 
 
-\subsubsection{LDA Model Training}
+\subsubsection{Latent Dirichlet Allocation Training}
 
+\todo[inline]{Need an introducing sentence before this statement about hyperparameters, this
+	sentence feels like its too defensive}
 We have done many different iterations of the models with varying numbers of topics and hyperparameters. The hyperparameters below are broadly matching what we found to be the best, however the favoured method of analysis came from looking at the actual clustering results, and the biggest impact came from the number of topics, with the final models being picked by their purity score (as described in Section~\ref{sec:purity}). The key hyperparameters used in the LDA model training are as follows:
 
 \begin{itemize}
 	\item Number of topics: {20, 40, 60, 80, 100}
 	      \begin{itemize}
 		      \item This parameter determines the number of topics the model attempts to discover in the corpus.
-		      \item The broad range allows for exploration of both coarse-grained and fine-grained topic structures, which is crucial for identifying potential sub-categories within CVSS metrics or broader themes across different metrics.
+		      \item The broad range in the number of topics allows for exploration of both coarse-grained and fine-grained topic structures, which is crucial for identifying potential sub-categories within CVSS metrics or broader themes across different metrics.
 	      \end{itemize}
 
 	\item $\alpha$: {\say{symmetric}}
 	      \begin{itemize}
 		      \item Controls the prior distribution over topic mixtures for each document.
-		      \item The \say{symmetric} setting assumes all topics are equally likely a priori for each document, providing an unbiased starting point for topic discovery in CVSS vulnerability descriptions.
+		      \item The \say{symmetric} setting assumes all topics are equally likely \textit{a
+			            priori} for each document, providing an unbiased starting point for topic discovery in CVSS vulnerability descriptions.
 	      \end{itemize}
 	\item $\eta$: {0.1}
 	      \begin{itemize}
@@ -462,8 +476,13 @@ We have done many different iterations of the models with varying numbers of top
 	      \end{itemize}
 \end{itemize}
 
-This set of hyperparameters collectively defines a thorough exploration of the topic space, allowing for the discovery of both broad and specific themes in the CVSS data. The wide range of topic numbers (20 to 100) was particularly impactful in identifying the optimal granularity for representing the vulnerability descriptions. The LDA model is implemented using Gensim's LdaMulticore~\cite{gensim}, allowing for parallel processing. In general we found Gensim very nice to work with, the model training was fast and the API made sense. The combination of Gensim's efficient implementation and these carefully chosen hyperparameters facilitated a comprehensive exploration of the topic structure in the CVSS vulnerability descriptions.
+This set of hyperparameters collectively defines a thorough exploration of the topic space, allowing
+for the discovery of both broad and specific themes in the CVSS data. The wide range of topic
+numbers (20 to 100) was particularly impactful in identifying the optimal granularity for
+representing the vulnerability descriptions. The LDA model is implemented using Gensim's
+LdaMulticore~\cite{gensim} using Python, allowing for parallel processing. In general we found Gensim very nice to work with, the model training was fast and the API made sense. The combination of Gensim's efficient implementation and these carefully chosen hyperparameters facilitated a comprehensive exploration of the topic structure in the CVSS vulnerability descriptions.
 
+\todo[inline]{Maybe this doesn't need to be its own subsubsection}
 \subsubsection{Topic Assignment and Analysis}
 
 For each saved model:
